@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS employees (
   email         VARCHAR(150) UNIQUE NOT NULL,
   password_hash VARCHAR(255) NOT NULL,              -- bcrypt hash
   role          ENUM('admin','employee') DEFAULT 'employee',
+  is_super_admin TINYINT(1) DEFAULT 0,
   department    VARCHAR(100) DEFAULT NULL,
   position      VARCHAR(100) DEFAULT NULL,
   phone         VARCHAR(20) DEFAULT NULL,
@@ -157,17 +158,17 @@ CREATE TABLE IF NOT EXISTS login_otp (
 -- =============================================================
 
 -- Admin account  (password: Admin@1234)
-INSERT INTO employees (emp_code, full_name, email, password_hash, role, department, position, hire_date) VALUES
-('ADM001', 'System Administrator', 'benjimoore1000outlook.com',
+INSERT INTO employees (emp_code, full_name, email, password_hash, role, is_super_admin, department, position, hire_date) VALUES
+('ADM001', 'System Administrator', 'benjimoore1000@gmail.com',
  '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- Admin@1234 (bcrypt)
- 'admin', 'Management', 'HR Administrator', '2020-01-01');
+ 'admin', 1, 'Management', 'HR Administrator', '2020-01-01');
 
 -- Employees  (password for all: Pass@1234)
 INSERT INTO employees (emp_code, full_name, email, password_hash, role, department, position, phone, hire_date) VALUES
-('EMP001', 'Nadia Opoku',  'opokubekoenadia@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Software Engineer',    '0244000001', '2021-03-15'),
-('EMP002', 'kofi Asare',   'kitos0246@gmail.com',     '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Marketing',    'Marketing Specialist', '0244000002', '2021-06-01'),
-('EMP003', 'Claudia Odai',  'odaiclaudia2005@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Senior Developer',     '0244000003', '2020-08-20'),
-('EMP004', 'Nana YAW Antwi', 'antwiyawgyimah19@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Sales',        'Sales Executive',      '0244000004', '2022-01-10'),
+('EMP001', 'Nadia Opoku Bekoe',  'opokubekoenadia@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Software Engineer',    '0244000001', '2021-03-15'),
+('EMP002', 'Kofi Asare',   'kitos0246@gmail.com',     '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Marketing',    'Marketing Specialist', '0244000002', '2021-06-01'),
+('EMP003', 'Claudia Naa Afoley Odai',  'odaiclaudia2005@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Senior Developer',     '0244000003', '2020-08-20'),
+('EMP004', 'Nana Yaw Antwi', 'antwiyawgyimah19@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Sales',        'Sales Executive',      '0244000004', '2022-01-10'),
 ('EMP005', 'Richmond Owusu',  'owusukwabenarichond9@gmail.com',     '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Finance',      'Accountant',           '0244000005', '2021-11-05');
 
 -- NOTE: The employee passwords above use a placeholder hash.

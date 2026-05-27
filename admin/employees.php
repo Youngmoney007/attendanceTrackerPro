@@ -8,6 +8,8 @@ require_once __DIR__ . '/../includes/helpers.php';
 
 requireAdmin();
 $db = getDB();
+$cu = currentUser();
+$isSuperAdmin = isSuperAdmin();
 
 $success = '';
 $error   = '';
@@ -27,44 +29,63 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $hire     = $_POST['hire_date']  ?? '';
         $status   = $_POST['status']     ?? 'active';
         $password = trim($_POST['password']   ?? '');
+        $existing = null;
 
-        if (!$fullName || !$email) {
-            $error = 'Name and email are required.';
-        } elseif (!isValidEmail($email)) {
-            $error = 'Please enter a valid Gmail or company email address for the employee.';
-        } else {
-            if ($action === 'add') {
-                if (!$password) { $error = 'Password is required for new employees.'; }
-                else {
-                    // Check email unique
-                    $chk = $db->prepare("SELECT COUNT(*) FROM employees WHERE email=?");
-                    $chk->execute([$email]);
-                    if ($chk->fetchColumn() > 0) {
-                        $error = 'Email already exists.';
-                    } else {
-                        // Auto generate emp_code
-                        $lastCode = $db->query("SELECT MAX(CAST(SUBSTRING(emp_code,4) AS UNSIGNED)) FROM employees WHERE emp_code LIKE 'EMP%'")->fetchColumn();
-                        $newCode  = 'EMP' . str_pad((int)$lastCode + 1, 3, '0', STR_PAD_LEFT);
+        if ($action === 'edit' && $id) {
+            $stmtE = $db->prepare("SELECT * FROM employees WHERE id=?");
+            $stmtE->execute([$id]);
+            $existing = $stmtE->fetch();
+            if (!$existing) {
+                $error = 'Employee not found.';
+            }
+        }
 
-                        $hash = password_hash($password, PASSWORD_BCRYPT);
-                        $db->prepare("
-                          INSERT INTO employees (emp_code,full_name,email,password_hash,role,department,position,phone,hire_date,status)
-                          VALUES (?,?,?,?,?,?,?,?,?,?)
-                        ")->execute([$newCode,$fullName,$email,$hash,$role,$dept,$pos,$phone,$hire,$status]);
-                        $success = "Employee {$fullName} added with code {$newCode}.";
+        if (!$error) {
+            if (!$fullName || !$email) {
+                $error = 'Name and email are required.';
+            } elseif (!isValidEmail($email)) {
+                $error = 'Please enter a valid Gmail or company email address for the employee.';
+            } elseif (!$isSuperAdmin && $role === 'admin') {
+                $error = 'Only the main admin can add or promote admins.';
+            } elseif ($action === 'edit' && $existing && !$isSuperAdmin && $id !== $cu['id']) {
+                $error = 'You can only edit your own profile.';
+            } else {
+                if ($action === 'add') {
+                    if (!$password) { $error = 'Password is required for new employees.'; }
+                    else {
+                        // Check email unique
+                        $chk = $db->prepare("SELECT COUNT(*) FROM employees WHERE email=?");
+                        $chk->execute([$email]);
+                        if ($chk->fetchColumn() > 0) {
+                            $error = 'Email already exists.';
+                        } else {
+                            // Auto generate emp_code
+                            $lastCode = $db->query("SELECT MAX(CAST(SUBSTRING(emp_code,4) AS UNSIGNED)) FROM employees WHERE emp_code LIKE 'EMP%'")->fetchColumn();
+                            $newCode  = 'EMP' . str_pad((int)$lastCode + 1, 3, '0', STR_PAD_LEFT);
+
+                            $hash = password_hash($password, PASSWORD_BCRYPT);
+                            $db->prepare("
+                              INSERT INTO employees (emp_code,full_name,email,password_hash,role,is_super_admin,department,position,phone,hire_date,status)
+                              VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                            ")->execute([$newCode,$fullName,$email,$hash,$role,0,$dept,$pos,$phone,$hire,$status]);
+                            $success = "Employee {$fullName} added with code {$newCode}.";
+                        }
                     }
+                } elseif ($action === 'edit' && $id && $existing) {
+                    if (!$isSuperAdmin) {
+                        $role = $existing['role'];
+                    }
+                    $params = [$fullName,$email,$role,$dept,$pos,$phone,$hire,$status,$id];
+                    $db->prepare("
+                      UPDATE employees SET full_name=?,email=?,role=?,department=?,position=?,phone=?,hire_date=?,status=?
+                      WHERE id=?
+                    ")->execute($params);
+                    if ($password) {
+                        $hash = password_hash($password, PASSWORD_BCRYPT);
+                        $db->prepare("UPDATE employees SET password_hash=? WHERE id=?")->execute([$hash,$id]);
+                    }
+                    $success = "Employee updated.";
                 }
-            } elseif ($action === 'edit' && $id) {
-                $params = [$fullName,$email,$role,$dept,$pos,$phone,$hire,$status,$id];
-                $db->prepare("
-                  UPDATE employees SET full_name=?,email=?,role=?,department=?,position=?,phone=?,hire_date=?,status=?
-                  WHERE id=?
-                ")->execute($params);
-                if ($password) {
-                    $hash = password_hash($password, PASSWORD_BCRYPT);
-                    $db->prepare("UPDATE employees SET password_hash=? WHERE id=?")->execute([$hash,$id]);
-                }
-                $success = "Employee updated.";
             }
         }
     }
@@ -80,12 +101,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $search = trim($_GET['search'] ?? '');
 $stmt   = $db->prepare("
   SELECT * FROM employees
-  WHERE role != 'admin'
+  WHERE (? = 1 OR role != 'admin' OR id = ?)
     AND (? = '' OR full_name LIKE ? OR email LIKE ? OR emp_code LIKE ?)
   ORDER BY department, full_name
 ");
 $like = "%$search%";
-$stmt->execute([$search, $like, $like, $like]);
+$stmt->execute([$isSuperAdmin ? 1 : 0, $cu['id'], $search, $like, $like, $like]);
 $employees = $stmt->fetchAll();
 
 // Fetch one employee for edit modal
@@ -94,6 +115,9 @@ if (!empty($_GET['edit'])) {
     $s = $db->prepare("SELECT * FROM employees WHERE id=?");
     $s->execute([(int)$_GET['edit']]);
     $editEmp = $s->fetch();
+    if ($editEmp && !$isSuperAdmin && $editEmp['role'] === 'admin' && $editEmp['id'] !== $cu['id']) {
+        $editEmp = null;
+    }
     if ($editEmp) {
         echo "<script>window.addEventListener('DOMContentLoaded',()=>openModal('empModal'))</script>";
     }

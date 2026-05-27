@@ -8,7 +8,7 @@ require_once __DIR__ . '/includes/config.php';
 
 // Admin credentials to create
 $adminEmail = 'benjimoore1000@gmail.com';
-$adminPassword = 'Admin@123';  // CHANGE THIS to your desired password
+$adminPassword = 'Admin@1234';  // CHANGE THIS to your desired password
 $adminName = 'Admin User';
 
 // Validation
@@ -31,8 +31,8 @@ try {
     
     // Insert admin user
     $stmt = $db->prepare("
-        INSERT INTO employees (emp_code, full_name, email, password_hash, role, status)
-        VALUES (?, ?, ?, ?, ?, ?)
+        INSERT INTO employees (emp_code, full_name, email, password_hash, role, is_super_admin, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     ");
     
     $stmt->execute([
@@ -41,6 +41,7 @@ try {
         $adminEmail,
         $passwordHash,
         'admin',
+        1,
         'active'
     ]);
     

@@ -15,7 +15,7 @@ define('DB_CHARSET', 'utf8mb4');
 define('APP_NAME',    'AttendTrack Pro');
 define('APP_VERSION', '1.0.0');
 define('APP_URL',     'http://localhost/attendance_tracker');
-define('COMPANY_EMAIL_DOMAIN', '@rhclimited.com');  // Change to your company domain
+define('COMPANY_EMAIL_DOMAIN', '@company.com');  // Change to your company domain
 
 // ---- Session Settings ----------------------------------------
 define('SESSION_LIFETIME', 3600);  // 1 hour in seconds

@@ -88,6 +88,13 @@ http://localhost/attendance_tracker/setup_passwords.php
 This sets correct bcrypt hashes for all sample accounts.
 **⚠️ Delete `setup_passwords.php` after running it.**
 
+If the admin login still does not work, run this repair script once:
+```
+http://localhost/attendance_tracker/fix_sample_data.php
+```
+This will reset the admin and sample employee emails/passwords to the demo credentials.
+**⚠️ Delete `fix_sample_data.php` after running it.**
+
 ### Step 6 – Open the application
 ```
 http://localhost/attendance_tracker/
@@ -99,7 +106,7 @@ http://localhost/attendance_tracker/
 
 | Role     | Email                                    | Password    |
 |----------|------------------------------------------|-------------|
-| Admin    | admin@company.com                        | Admin@1234  |
+| Admin    | benjimoore1000@gmail.com                | Admin@1234  |
 | Employee | opokubekoenadia@gmail.com                | Pass@1234   |
 | Employee | kitos0246@gmail.com                      | Pass@1234   |
 | Employee | odaiclaudia2005@gmail.com                | Pass@1234   |

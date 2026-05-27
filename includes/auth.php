@@ -54,13 +54,22 @@ function loginUser(array $user): void {
     startSession();
     session_regenerate_id(true);
 
-    $_SESSION['user_id']   = $user['id'];
-    $_SESSION['emp_code']  = $user['emp_code'];
-    $_SESSION['full_name'] = $user['full_name'];
-    $_SESSION['email']     = $user['email'];
-    $_SESSION['role']      = $user['role'];
-    $_SESSION['dept']      = $user['department'];
-    $_SESSION['logged_in'] = true;
+    $_SESSION['user_id']       = $user['id'];
+    $_SESSION['emp_code']      = $user['emp_code'];
+    $_SESSION['full_name']     = $user['full_name'];
+    $_SESSION['email']         = $user['email'];
+    $_SESSION['role']          = $user['role'];
+    $_SESSION['dept']          = $user['department'];
+    $_SESSION['is_super_admin']= !empty($user['is_super_admin']) ? 1 : 0;
+    $_SESSION['logged_in']     = true;
+}
+
+// -----------------------------------------------------------
+// Check whether current user is the main super admin
+// -----------------------------------------------------------
+function isSuperAdmin(): bool {
+    startSession();
+    return !empty($_SESSION['is_super_admin']);
 }
 
 // -----------------------------------------------------------
@@ -100,12 +109,13 @@ function requireAdmin(): void {
 function currentUser(): array {
     startSession();
     return [
-        'id'        => $_SESSION['user_id']   ?? 0,
-        'emp_code'  => $_SESSION['emp_code']  ?? '',
-        'full_name' => $_SESSION['full_name'] ?? '',
-        'email'     => $_SESSION['email']     ?? '',
-        'role'      => $_SESSION['role']      ?? '',
-        'dept'      => $_SESSION['dept']      ?? '',
+        'id'            => $_SESSION['user_id']   ?? 0,
+        'emp_code'      => $_SESSION['emp_code']  ?? '',
+        'full_name'     => $_SESSION['full_name'] ?? '',
+        'email'         => $_SESSION['email']     ?? '',
+        'role'          => $_SESSION['role']      ?? '',
+        'dept'          => $_SESSION['dept']      ?? '',
+        'is_super_admin'=> $_SESSION['is_super_admin'] ?? 0,
     ];
 }
 
