@@ -97,17 +97,142 @@ function generateOTP(int $length = OTP_LENGTH): string {
 function sendOTPEmail(string $email, string $otp, string $fullName = ''): bool {
     $message = "Hello {$fullName},\n\n";
     $message .= "Your code is {$otp}\n\n";
-    $message .= "This code expires in 10 minutes.\n\n";
+    $message .= "This code expires in " . OTP_EXPIRY_MINS . " minutes.\n\n";
     $message .= "If you did not request this, please ignore this email.\n\n";
     $message .= "Best regards,\nAttendTrack Pro Team";
 
     $subject = 'Your Attendance Tracker Login Code';
+    return sendEmail($email, $subject, $message);
+}
+
+// -----------------------------------------------------------
+// Send a plain-text email using configured SMTP or mail()
+// -----------------------------------------------------------
+function sendEmail(string $to, string $subject, string $body): bool {
     $headers = "From: " . SMTP_FROM_NAME . " <" . SMTP_FROM_EMAIL . ">\r\n";
     $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
 
-    // For localhost/development: use PHP's mail() function
-    // For production with SMTP: use proper SMTP library or set up php.ini
-    return mail($email, $subject, $message, $headers);
+    if (SMTP_HOST && SMTP_PORT && SMTP_USERNAME && SMTP_PASSWORD) {
+        return sendEmailViaSmtp($to, $subject, $body, $headers);
+    }
+
+    return mail($to, $subject, $body, $headers);
+}
+
+// -----------------------------------------------------------
+// Send email via SMTP (supports TLS/STARTTLS)
+// -----------------------------------------------------------
+function sendEmailViaSmtp(string $to, string $subject, string $body, string $headers = ''): bool {
+    $host     = SMTP_HOST;
+    $port     = SMTP_PORT;
+    $username = SMTP_USERNAME;
+    $password = SMTP_PASSWORD;
+    $from     = SMTP_FROM_EMAIL;
+    $name     = SMTP_FROM_NAME;
+
+    $remote = ($port === 465 ? 'ssl://' : '') . $host . ':' . $port;
+    $timeout = 30;
+    $socket = stream_socket_client($remote, $errno, $errstr, $timeout, STREAM_CLIENT_CONNECT);
+    if (!$socket) {
+        return false;
+    }
+
+    stream_set_timeout($socket, $timeout);
+
+    $response = trim(fgets($socket, 515));
+    if (strpos($response, '220') !== 0) {
+        fclose($socket);
+        return false;
+    }
+
+    $hostname = gethostname() ?: 'localhost';
+    fwrite($socket, "EHLO {$hostname}\r\n");
+    $ehlo = trim(fgets($socket, 515));
+    if (strpos($ehlo, '250') !== 0) {
+        fclose($socket);
+        return false;
+    }
+
+    if ($port !== 465) {
+        fwrite($socket, "STARTTLS\r\n");
+        $tlsResponse = trim(fgets($socket, 515));
+        if (strpos($tlsResponse, '220') !== 0) {
+            fclose($socket);
+            return false;
+        }
+        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            fclose($socket);
+            return false;
+        }
+        fwrite($socket, "EHLO {$hostname}\r\n");
+        trim(fgets($socket, 515));
+    }
+
+    fwrite($socket, "AUTH LOGIN\r\n");
+    trim(fgets($socket, 515));
+    fwrite($socket, base64_encode($username) . "\r\n");
+    trim(fgets($socket, 515));
+    fwrite($socket, base64_encode($password) . "\r\n");
+    $authResponse = trim(fgets($socket, 515));
+    if (strpos($authResponse, '235') !== 0) {
+        fclose($socket);
+        return false;
+    }
+
+    fwrite($socket, "MAIL FROM:<{$from}>\r\n");
+    trim(fgets($socket, 515));
+    fwrite($socket, "RCPT TO:<{$to}>\r\n");
+    $rcpt = trim(fgets($socket, 515));
+    if (strpos($rcpt, '250') !== 0 && strpos($rcpt, '251') !== 0) {
+        fclose($socket);
+        return false;
+    }
+
+    fwrite($socket, "DATA\r\n");
+    trim(fgets($socket, 515));
+
+    $message = "From: {$name} <{$from}>\r\n";
+    $message .= "To: {$to}\r\n";
+    $message .= "Subject: {$subject}\r\n";
+    $message .= "{$headers}\r\n";
+    $message .= "\r\n{$body}\r\n.\r\n";
+
+    fwrite($socket, $message);
+    $dataResponse = trim(fgets($socket, 515));
+    if (strpos($dataResponse, '250') !== 0) {
+        fclose($socket);
+        return false;
+    }
+
+    fwrite($socket, "QUIT\r\n");
+    trim(fgets($socket, 515));
+    fclose($socket);
+    return true;
+}
+
+// -----------------------------------------------------------
+// Send a notification email to an employee by ID
+// -----------------------------------------------------------
+function sendNotificationEmail(int $employeeId, string $subject, string $message, string $link = ''): void {
+    try {
+        $db = getDB();
+        $stmt = $db->prepare("SELECT email, full_name FROM employees WHERE id = ? AND status = 'active' LIMIT 1");
+        $stmt->execute([$employeeId]);
+        $user = $stmt->fetch();
+        if (!$user || !$user['email']) {
+            return;
+        }
+
+        $body = "Hello {$user['full_name']},\n\n{$message}\n\n";
+        if ($link) {
+            $body .= "View details: {$link}\n\n";
+        }
+        $body .= "Best regards,\nAttendTrack Pro Team";
+
+        sendEmail($user['email'], $subject, $body);
+    } catch (Exception $e) {
+        // Do not interrupt application flow if email fails
+    }
 }
 
 // -----------------------------------------------------------
@@ -176,6 +301,9 @@ function addNotification(int $employeeId, string $message, string $link = ''): v
         $db   = getDB();
         $stmt = $db->prepare("INSERT INTO notifications (employee_id, message, link) VALUES (?, ?, ?)");
         $stmt->execute([$employeeId, $message, $link]);
+
+        // Send an email alert to the recipient as well
+        sendNotificationEmail($employeeId, 'AttendTrack Pro Notification', $message, $link);
     } catch (Exception $e) {
         // Non-fatal – log silently
     }
