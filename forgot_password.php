@@ -18,8 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$email || !$password || !$confirmPassword) {
         $error = 'Please fill in all fields.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'Please enter a valid email address.';
+    } elseif (!isValidEmail($email)) {
+        $error = 'Please enter a valid Gmail or company email address.';
     } elseif ($password !== $confirmPassword) {
         $error = 'Passwords do not match. Please try again.';
     } elseif (strlen($password) < 8) {
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="email">Registered Email</label>
             <div class="input-wrap">
               <svg class="input-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              <input type="email" id="email" name="email" placeholder="you@company.com"
+              <input type="email" id="email" name="email" placeholder="you@gmail.com or you@rhclimited.com"
                      value="<?= e($_POST['email'] ?? '') ?>" autocomplete="email" required/>
             </div>
           </div>

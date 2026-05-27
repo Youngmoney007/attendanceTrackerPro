@@ -25,6 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$email || !$password) {
         $error = 'Please enter both email and password.';
+    } elseif (!isValidEmail($email)) {
+        $error = 'Please sign in with a Gmail or company email address.';
     } else {
         $user = attemptLogin($email, $password);
         if ($user) {
@@ -97,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <label for="email">Email Address</label>
             <div class="input-wrap">
               <svg class="input-icon" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-              <input type="email" id="email" name="email" placeholder="you@company.com"
+              <input type="email" id="email" name="email" placeholder="you@gmail.com or you@rhclimited.com"
                      value="<?= e($_POST['email'] ?? '') ?>" autocomplete="email" required/>
             </div>
           </div>

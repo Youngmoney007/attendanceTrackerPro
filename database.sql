@@ -119,23 +119,56 @@ CREATE TABLE IF NOT EXISTS notifications (
   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- ----------------------------------------------------------------
+-- TABLE: login_devices
+-- Track employee login devices for OTP verification
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS login_devices (
+  id              INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id     INT NOT NULL,
+  device_fingerprint VARCHAR(64) NOT NULL,  -- SHA256 hash of IP + User-Agent
+  device_name     VARCHAR(255) DEFAULT NULL,
+  last_login      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_emp_device (employee_id, device_fingerprint),
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ----------------------------------------------------------------
+-- TABLE: login_otp
+-- One-time passwords for device verification
+-- ----------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS login_otp (
+  id            INT AUTO_INCREMENT PRIMARY KEY,
+  employee_id   INT NOT NULL,
+  otp_code      VARCHAR(10) NOT NULL,
+  device_fingerprint VARCHAR(64) NOT NULL,
+  attempts      INT DEFAULT 0,
+  max_attempts  INT DEFAULT 5,
+  is_verified   TINYINT(1) DEFAULT 0,
+  created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at    TIMESTAMP NULL,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  INDEX idx_emp_otp (employee_id, otp_code)
+) ENGINE=InnoDB;
+
 -- =============================================================
 -- SAMPLE DATA
 -- =============================================================
 
 -- Admin account  (password: Admin@1234)
 INSERT INTO employees (emp_code, full_name, email, password_hash, role, department, position, hire_date) VALUES
-('ADM001', 'System Administrator', 'admin@company.com',
+('ADM001', 'System Administrator', 'benjimoore1000outlook.com',
  '$2y$12$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', -- Admin@1234 (bcrypt)
  'admin', 'Management', 'HR Administrator', '2020-01-01');
 
 -- Employees  (password for all: Pass@1234)
 INSERT INTO employees (emp_code, full_name, email, password_hash, role, department, position, phone, hire_date) VALUES
-('EMP001', 'Kwesi Bonsu',   'kwesi@company.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Software Engineer',    '0244000001', '2021-03-15'),
-('EMP002', 'Abena Afiriyie',    'abena@company.com',     '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Marketing',    'Marketing Specialist', '0244000002', '2021-06-01'),
-('EMP003', 'Carl Johnson',  'carl@company.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Senior Developer',     '0244000003', '2020-08-20'),
-('EMP004', 'Jesus Christ',       'jesus@company.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Sales',        'Sales Executive',      '0244000004', '2022-01-10'),
-('EMP005', 'Evaluna Micheals ',  'eva@company.com',     '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Finance',      'Accountant',           '0244000005', '2021-11-05');
+('EMP001', 'Nadia Opoku',  'opokubekoenadia@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Software Engineer',    '0244000001', '2021-03-15'),
+('EMP002', 'kofi Asare',   'kitos0246@gmail.com',     '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Marketing',    'Marketing Specialist', '0244000002', '2021-06-01'),
+('EMP003', 'Claudia Odai',  'odaiclaudia2005@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Engineering',  'Senior Developer',     '0244000003', '2020-08-20'),
+('EMP004', 'Nana YAW Antwi', 'antwiyawgyimah19@gmail.com',   '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Sales',        'Sales Executive',      '0244000004', '2022-01-10'),
+('EMP005', 'Richmond Owusu',  'owusukwabenarichond9@gmail.com',     '$2y$10$zGrxU2PxMffl42Ybmmw74eQ8lS.XG8bXgQy2.WEFskSccqRneopxa', 'employee', 'Finance',      'Accountant',           '0244000005', '2021-11-05');
 
 -- NOTE: The employee passwords above use a placeholder hash.
 -- The setup script (setup_passwords.php) will fix them to Pass@1234 on first run.

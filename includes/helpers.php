@@ -12,6 +12,23 @@ function e(mixed $val): string {
 }
 
 // -----------------------------------------------------------
+// Email validation - accepts Gmail or company domain emails
+// -----------------------------------------------------------
+function isValidEmail(string $email): bool {
+    $normalized = strtolower(trim($email));
+    if (!filter_var($normalized, FILTER_VALIDATE_EMAIL)) {
+        return false;
+    }
+    return str_ends_with($normalized, '@gmail.com') 
+        || str_ends_with($normalized, COMPANY_EMAIL_DOMAIN);
+}
+
+// Keep backward compatibility
+function isGmailEmail(string $email): bool {
+    return isValidEmail($email);
+}
+
+// -----------------------------------------------------------
 // Redirect helper
 // -----------------------------------------------------------
 function redirect(string $url): never {
@@ -65,6 +82,41 @@ function statusBadge(string $status): string {
     $cls   = $map[$status] ?? 'badge-default';
     $label = ucwords(str_replace('_', ' ', $status));
     return "<span class=\"badge $cls\">$label</span>";
+}
+
+// -----------------------------------------------------------
+// Generate a random OTP code
+// -----------------------------------------------------------
+function generateOTP(int $length = OTP_LENGTH): string {
+    return str_pad((string)random_int(0, (10 ** $length) - 1), $length, '0', STR_PAD_LEFT);
+}
+
+// -----------------------------------------------------------
+// Send OTP via SMTP email
+// -----------------------------------------------------------
+function sendOTPEmail(string $email, string $otp, string $fullName = ''): bool {
+    $message = "Hello {$fullName},\n\n";
+    $message .= "Your code is {$otp}\n\n";
+    $message .= "This code expires in 10 minutes.\n\n";
+    $message .= "If you did not request this, please ignore this email.\n\n";
+    $message .= "Best regards,\nAttendTrack Pro Team";
+
+    $subject = 'Your Attendance Tracker Login Code';
+    $headers = "From: " . SMTP_FROM_NAME . " <" . SMTP_FROM_EMAIL . ">\r\n";
+    $headers .= "Content-Type: text/plain; charset=UTF-8\r\n";
+
+    // For localhost/development: use PHP's mail() function
+    // For production with SMTP: use proper SMTP library or set up php.ini
+    return mail($email, $subject, $message, $headers);
+}
+
+// -----------------------------------------------------------
+// Get user's device fingerprint (IP + User-Agent)
+// -----------------------------------------------------------
+function getDeviceFingerprint(): string {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+    $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? '';
+    return hash('sha256', $ip . $userAgent);
 }
 
 // -----------------------------------------------------------

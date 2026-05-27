@@ -15,6 +15,7 @@ define('DB_CHARSET', 'utf8mb4');
 define('APP_NAME',    'AttendTrack Pro');
 define('APP_VERSION', '1.0.0');
 define('APP_URL',     'http://localhost/attendance_tracker');
+define('COMPANY_EMAIL_DOMAIN', '@rhclimited.com');  // Change to your company domain
 
 // ---- Session Settings ----------------------------------------
 define('SESSION_LIFETIME', 3600);  // 1 hour in seconds
@@ -28,6 +29,19 @@ define('FULL_DAY_HOURS',   8.0);     // Target hours
 
 // ---- Timezone ------------------------------------------------
 date_default_timezone_set('Africa/Accra');  // Change to your timezone
+
+// ---- SMTP Email Settings ------------------------------------
+define('SMTP_HOST',       'smtp.gmail.com');       // Gmail SMTP
+define('SMTP_PORT',       587);                    // TLS port
+define('SMTP_USERNAME',   'your-email@gmail.com'); // Change this
+define('SMTP_PASSWORD',   'your-app-password');   // Gmail App Password (not regular password)
+define('SMTP_FROM_EMAIL', 'your-email@gmail.com'); // Sender email
+define('SMTP_FROM_NAME',  'AttendTrack Pro');      // Sender name
+
+// ---- OTP Settings -------------------------------------------
+define('OTP_LENGTH',      4);                      // 4-digit code
+define('OTP_EXPIRY_MINS', 10);                     // 10 minutes
+define('OTP_RECHECK_DAYS', 7);                     // Recheck OTP every 7 days
 
 // =============================================================
 // Database connection via PDO

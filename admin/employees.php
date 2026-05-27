@@ -30,6 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$fullName || !$email) {
             $error = 'Name and email are required.';
+        } elseif (!isValidEmail($email)) {
+            $error = 'Please enter a valid Gmail or company email address for the employee.';
         } else {
             if ($action === 'add') {
                 if (!$password) { $error = 'Password is required for new employees.'; }
@@ -197,7 +199,7 @@ require_once __DIR__ . '/../includes/nav.php';
           </div>
           <div class="form-group-plain">
             <label>Email *</label>
-            <input type="email" name="email" value="<?= e($editEmp['email'] ?? '') ?>" required/>
+            <input type="email" name="email" placeholder="user@gmail.com or user@rhclimited.com" value="<?= e($editEmp['email'] ?? '') ?>" required/>
           </div>
           <div class="form-group-plain">
             <label>Department</label>

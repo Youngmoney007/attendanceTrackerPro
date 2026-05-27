@@ -97,14 +97,14 @@ http://localhost/attendance_tracker/
 
 ## 🔑 Demo Login Credentials
 
-| Role     | Email                    | Password    |
-|----------|--------------------------|-------------|
-| Admin    | admin@company.com        | Admin@1234  |
-| Employee |kwesi@company.com        | Pass@1234   |
-| Employee | abena@company.com      | Pass@1234   |
-| Employee | carl@company.com        | Pass@1234   |
-| Employee | jesus@company.com        | Pass@1234   |
-| Employee | eva@company.com          | Pass@1234   |
+| Role     | Email                                    | Password    |
+|----------|------------------------------------------|-------------|
+| Admin    | admin@company.com                        | Admin@1234  |
+| Employee | opokubekoenadia@gmail.com                | Pass@1234   |
+| Employee | kitos0246@gmail.com                      | Pass@1234   |
+| Employee | odaiclaudia2005@gmail.com                | Pass@1234   |
+| Employee | antwiyawgyimah19@gmail.com               | Pass@1234   |
+| Employee | owusukwabenarichond9@gmail.com           | Pass@1234   |
 
 ---
 
@@ -173,7 +173,7 @@ define('APP_NAME', 'Your Company Tracker');
 
 ---
 
-## 🔒 Production Checklist (before going live)
+## � Production Checklist (before going live)
 - [ ] Change DB credentials in `config.php`
 - [ ] Set strong admin password
 - [ ] Enable HTTPS and set `'secure' => true` in session config
