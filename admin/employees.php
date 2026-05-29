@@ -99,16 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // ---- Fetch employees ----------------------------------------
 $search = trim($_GET['search'] ?? '');
-$stmt   = $db->prepare("
-  SELECT * FROM employees
-  WHERE (? = 1 OR role != 'admin' OR id = ?)
-    AND (? = '' OR full_name LIKE ? OR email LIKE ? OR emp_code LIKE ?)
-  ORDER BY department, full_name
-");
-$like = "%$search%";
-$stmt->execute([$isSuperAdmin ? 1 : 0, $cu['id'], $search, $like, $like, $like]);
-$employees = $stmt->fetchAll();
-
+$employees = getEmployees($search, $isSuperAdmin, $cu['id']);
 // Fetch one employee for edit modal
 $editEmp = null;
 if (!empty($_GET['edit'])) {

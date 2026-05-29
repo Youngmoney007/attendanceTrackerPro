@@ -120,6 +120,23 @@ function sendEmail(string $to, string $subject, string $body): bool {
 }
 
 // -----------------------------------------------------------
+// Fetch employees with optional search and admin visibility
+// -----------------------------------------------------------
+function getEmployees(string $search = '', bool $isSuperAdmin = false, int $currentUserId = 0): array {
+        $db = getDB();
+        $sql = "
+            SELECT * FROM employees
+            WHERE (? = 1 OR role != 'admin' OR id = ?)
+                AND (? = '' OR full_name LIKE ? OR email LIKE ? OR emp_code LIKE ?)
+            ORDER BY department, full_name
+        ";
+        $like = "%$search%";
+        $stmt = $db->prepare($sql);
+        $stmt->execute([$isSuperAdmin ? 1 : 0, $currentUserId, $search, $like, $like, $like]);
+        return $stmt->fetchAll();
+}
+
+// -----------------------------------------------------------
 // Send email via SMTP (supports TLS/STARTTLS)
 // -----------------------------------------------------------
 function sendEmailViaSmtp(string $to, string $subject, string $body, string $headers = ''): bool {
