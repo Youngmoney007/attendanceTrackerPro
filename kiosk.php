@@ -1,3 +1,6 @@
+<?php
+require_once __DIR__ . '/includes/config.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -502,7 +505,7 @@
 // Kiosk JavaScript
 // =============================================================
 
-const API_URL   = 'api/qr_scan.php';  // Relative path – adjust if needed
+const API_URL   = '<?= APP_URL ?>/api/qr_scan.php';
 let scanMode    = 'checkin';           // 'checkin' | 'checkout'
 let lastToken   = '';
 let lastScanTs  = 0;
