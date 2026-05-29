@@ -14,7 +14,7 @@ define('DB_CHARSET', 'utf8mb4');
 // ---- Application Settings ------------------------------------
 define('APP_NAME',    'AttendTrack Pro');
 define('APP_VERSION', '1.0.0');
-define('APP_URL',     'http://localhost/attendance_tracker');
+define('APP_URL',     'http://localhost/attendanceTrackerPro');
 define('COMPANY_EMAIL_DOMAIN', '@gmail.com');  // Change to your company domain
 
 // ---- Session Settings ----------------------------------------
